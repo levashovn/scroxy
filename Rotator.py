@@ -10,10 +10,11 @@ import time
 import traceback
 
 import asyncio
-from datetime import datetime
+from datetime import datetime, date
 import aiofiles
 import aiohttp
-proxy_type = "http"
+
+# proxy_type = "http"
 test_url = "http://api.ipify.org"
 timeout_sec = 4
 
@@ -65,6 +66,7 @@ def main():
 
 class ProxyRotator():
 	def __init__(self):
+		self.free_proxy_list()
 		main()
 		self.options = webdriver.ChromeOptions()
 		self.options.add_argument('--headless')
@@ -105,31 +107,24 @@ class ProxyRotator():
 
 	def free_proxy_list(self):
 		proxies = []
-		driver = webdriver.Chrome(chrome_options=self.options)
-		driver.get('https://www.sslproxies.org/')
-		next_status = driver.find_element_by_xpath("//li[@id='proxylisttable_next']").get_attribute('class')
-		while not 'disabled' in next_status:
-			next_status = driver.find_element_by_xpath("//li[@id='proxylisttable_next']").get_attribute('class')
-			next = driver.find_element_by_xpath("//li[@id='proxylisttable_next']//a")
-			try:
-				code = driver.page_source
-				html = bs(code, 'html.parser')
-				rows = html.find('tbody').find_all('tr')
-				print(len(rows))
-				# rows = html.getElementByTagName('tbody').getElementsByTagName('tr')
-				for row in rows:
-					items = row.find('td')
-					d = {'protocol': 'https',
-						 'ip': items[0].text,
-						 'port': items[1].text}
-					proxies.append(d)
-				next.click()
-				time.sleep(1)
-			except:
-				break
-		f = open('scraped_proxies.txt', 'w')
-		f.write(proxies)
-		f.close()
+		r = requests.get('https://www.sslproxies.org')
+		html = bs(r.text, 'html.parser')
+		rows = html.find(class_='table-responsive').find('tbody').find_all('tr')
+		print(len(rows))
+		for row in rows[1:]:
+			tds = row.find_all('td')
+
+			d = {'protocol': 'https' if tds[5].text == 'yes' else 'http',
+				 'ip': tds[0].text,
+				 'port': tds[1].text
+				 }
+			print(d)
+			proxies.append(d)
+		for proxy in proxies:
+			str_proxy = proxy['ip'] + ':' + proxy['port']
+			f = open('proxy_list.txt', 'a')
+			f.write(str_proxy + '\n')
+			f.close()
 		return proxies
 
 	def hidemyname(self):
