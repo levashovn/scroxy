@@ -1,0 +1,9 @@
+aiodns==2.0.0
+aiofiles==0.4.0
+aiohttp==3.5.4
+aionmap==0.0.2
+beautifulsoup4==4.7.1
+bs4==0.0.1
+fake-useragent==0.1.11
+selenium==3.141.0
+python-nmap
