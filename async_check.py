@@ -8,14 +8,14 @@ import aiohttp
 import asyncpg
 import requests
 import json
-
+import local_congfig
 
 
 MAX_NUMBER_OF_RETRIES = 5
 
 async def read():
-	conn = await asyncpg.connect(user='Levashovn', password='1qwerty7',
-								 database='proxygrab', host='localhost')
+	conn = await asyncpg.connect(user=local_congfig.DB_USER, password=local_congfig.DB_PASS,
+								 database=local_congfig.DB_NAME, host=local_congfig.DB_HOST)
 	rows = await conn.fetch('SELECT curl, ip, protocol FROM pwproxies ')
 	await conn.close()
 	return [x['curl'] for x in rows]
