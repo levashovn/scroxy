@@ -3,13 +3,13 @@ import concurrent.futures
 import nmap
 import requests
 
-from psycopg2 import sql, IntegrityError, pool
+from psycopg2 import sql, pool
 from contextlib import contextmanager
-import local_congfig
+from local_config import  DB_HOST,DB_NAME,DB_PASS,DB_USER
 ##SETTING UP DB CON
 db = pool.SimpleConnectionPool(1, 10,
-							   user=local_congfig.DB_USER, password=local_congfig.DB_PASS,
-							   database=local_congfig.DB_NAME, host=local_congfig.DB_HOST)
+							   user=DB_USER, password=DB_PASS,
+							   database=DB_NAME, host=DB_HOST)
 print('Successfully connected to db...')
 
 @contextmanager
@@ -46,6 +46,7 @@ def write_to_db(d):
 
 def scan_range(ip_range):
 	nm = nmap.PortScanner()
+	print('got here')
 	nm.scan(ip_range, '80,1080,8080,8081,8888,9999,3128,443,8443')
 	for host in nm.all_hosts():
 		print('----------------------------------------------------')
@@ -59,13 +60,13 @@ def scan_range(ip_range):
 		lports = sorted(lport)
 		for port in lports:
 			if nm[host][proto][port]['state'] == 'open':
-				if port == '1080':
+				if port == 1080:
 					d = {'curl': 'http://' + host + ':' + str(port),
 						 'ip': host,
 						 'protocol': 'socks4',
 						 'port': str(port)}
 					write_to_db(d)
-				elif port == '443' or port == '8443':
+				elif port == 443 or port == 8443:
 					d = {'curl': 'https://' + host + ':' + str(port),
 						 'ip': host,
 						 'protocol': 'https',
@@ -87,7 +88,7 @@ with concurrent.futures.ThreadPoolExecutor(max_workers=None) as executor:
 	ranges = [prefix['ip_prefix'] for prefix in j['prefixes']]
 	print(ranges)
 	print(len(ranges))
-	futures = [executor.submit(scan_range, ip_range) for ip_range in ranges]
+	futures = [executor.submit(scan_range, ip_range) for ip_range in ranges[len(ranges)//2:]]
 	for future in concurrent.futures.as_completed(futures):
 		try:
 			data = future.result()
