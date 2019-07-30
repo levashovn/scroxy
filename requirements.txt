@@ -8,10 +8,12 @@ fake-useragent==0.1.11
 selenium==3.141.0
 python-nmap
 asyncpg
-aps-scheduler
+apscheduler
 webargs
 flask
 marshmallow
 flask-restful
 flask-marshmallow
 flask-sqlalchemy
+requests
+psycopg2
